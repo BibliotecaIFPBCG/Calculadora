@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Dias Úteis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+        }
+        img {
+            width: 300px;
+            display: block;
+            margin: 0 auto 20px;
+        }
+        .resultado-container {
+            display: none;
+            margin-top: 20px;
+        }
+        .feriados-lista {
+            display: flex;
+            justify-content: space-between;
+            text-align: justify;
+        }
+        .feriados-lista ul {
+            flex: 1;
+            padding: 0 10px;
+            list-style-type: none;
+        }
+        .feriados-titulo {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://www.ifpb.edu.br/campinagrande/documentos-gerais/downloads/logo-campus-horizontal-png/@@images/b09090e5-b5ea-4c5d-aafb-be44a2f31418.png" alt="Logo IFPB">
+    
+    <h2>Calculadora de Dias Úteis</h2>
+    <label for="startDate">Data Inicial:</label>
+    <input type="date" id="startDate">
+    
+    <label for="endDate">Data Final:</label>
+    <input type="date" id="endDate">
+    
+    <label for="salarioMinimo">Valor do Salário Mínimo Vigente:</label>
+    <input type="text" id="salarioMinimo" value="1.518,00">
+    
+    <button onclick="calcularDiasUteis()">Calcular</button>
+    
+    <h3 id="resultado"></h3>
+    <h3 id="diasBloqueio"></h3>
+    <h3 id="valorMulta"></h3>
+    <h3 id="multaTotal"></h3>
+    
+    <div class="resultado-container" id="resultadoContainer">
+        <a href="https://pagtesouro.tesouro.gov.br/portal-gru/#/emissao-gru" target="_blank">Gerar GRU</a>
+        <p>Unidade Gestora / Gestão: 158281 / 26417</p>
+        <p>Código de Recolhimento: 28830-6</p>
+        <p>Número de Referência - usar número do processo.</p>
+    </div>
+
+    <h3 id="feriados"></h3>
+    <h3 id="fds"></h3>
+    <div class="feriados-titulo">Feriados no período</div>
+    <div class="feriados-lista" id="feriadosPeriodo">
+        <ul id="coluna1"></ul>
+        <ul id="coluna2"></ul>
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("salarioMinimo").value = "1.518,00"; // Definir valor padrão do salário mínimo
+        });
+
+        function formatarData(data) {
+            const partes = data.split("-");
+            return `${partes[2]}/${partes[1]}/${partes[0].slice(2)}`;
+        }
+
+        function calcularDiasUteis() {
+            const startDate = new Date(document.getElementById("startDate").value);
+            const endDate = new Date(document.getElementById("endDate").value);
+            let salarioMinimo = document.getElementById("salarioMinimo").value.replace(".", "").replace(",", ".");
+            salarioMinimo = parseFloat(salarioMinimo) || 0;
+            
+            if (isNaN(startDate) || isNaN(endDate) || startDate > endDate) {
+                document.getElementById("resultado").innerText = "Por favor, insira datas válidas.";
+                return;
+            }
+            
+            let count = 0;
+            let currentDate = new Date(startDate);
+            const feriados = [
+                { data: "2025-01-01", descricao: "Ano Novo" },
+                { data: "2025-04-21", descricao: "Tiradentes" },
+                { data: "2025-05-01", descricao: "Dia do Trabalho" },
+                { data: "2025-09-07", descricao: "Independência do Brasil" },
+                { data: "2025-12-25", descricao: "Natal" },
+                { data: "2025-02-24", descricao: "Carnaval (segunda-feira)" },
+                { data: "2025-02-25", descricao: "Carnaval (terça-feira)" },
+                { data: "2025-02-26", descricao: "Carnaval (quarta-feira)" },
+                { data: "2025-02-27", descricao: "Carnaval (quinta-feira)" },
+                { data: "2025-02-28", descricao: "Carnaval (sexta-feira)" },
+                { data: "2025-08-05", descricao: "Fundação da Paraíba" },
+                { data: "2025-10-11", descricao: "Aniversário de Campina Grande" },
+                { data: "2025-10-12", descricao: "Nossa Sr.a Aparecida - Padroeira do Brasil" },
+                { data: "2025-11-02", descricao: "Finados" },
+                { data: "2025-11-15", descricao: "Proclamação da República" },
+                { data: "2025-11-20", descricao: "Dia de Zumbi" },
+                { data: "2025-10-28", descricao: "Dia do Servidor Público" },
+                { data: "2025-12-23", descricao: "Antevéspera de Natal" },
+                { data: "2025-12-24", descricao: "Véspera de Natal" },
+                { data: "2025-12-31", descricao: "Véspera de Ano Novo" }
+            ];
+
+            const todosFeriados = feriados;
+            let feriadosPeriodo = [];
+
+            while (currentDate <= endDate) {
+                const dayOfWeek = currentDate.getDay();
+                const formattedDate = currentDate.toISOString().split('T')[0];
+                
+                const feriadoEncontrado = todosFeriados.find(feriado => feriado.data === formattedDate);
+                if (feriadoEncontrado) {
+                    feriadosPeriodo.push(formatarData(feriadoEncontrado.data) + " - " + feriadoEncontrado.descricao);
+                }
+
+                if (dayOfWeek !== 0 && dayOfWeek !== 6 && !feriadoEncontrado) {
+                    count++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            const diasBloqueio = count / 2;
+            const valorMultaPorDia = (salarioMinimo * 0.001).toFixed(6).replace(".", ",");
+            const multaTotal = (parseFloat(valorMultaPorDia.replace(",", ".")) * diasBloqueio).toFixed(6).replace(".", ",");
+
+            document.getElementById("resultado").innerText = `Dias úteis: ${count}`;
+            document.getElementById("diasBloqueio").innerText = `Dias de bloqueio dividido por 2: ${diasBloqueio}`;
+            document.getElementById("valorMulta").innerText = `Valor da multa por dia: R$ ${valorMultaPorDia}`;
+            document.getElementById("multaTotal").innerText = `Multa total: R$ ${multaTotal}`;
+            document.getElementById("fds").innerText = `Fins de semana no período: ${Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24 * 7)) * 2}`;
+            document.getElementById("resultadoContainer").style.display = "block";
+
+            let coluna1 = document.getElementById("coluna1");
+            let coluna2 = document.getElementById("coluna2");
+            coluna1.innerHTML = "";
+            coluna2.innerHTML = "";
+            
+            feriadosPeriodo.forEach((feriado, index) => {
+                if (index % 2 === 0) {
+                    coluna1.innerHTML += `<li>${feriado}</li>`;
+                } else {
+                    coluna2.innerHTML += `<li>${feriado}</li>`;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

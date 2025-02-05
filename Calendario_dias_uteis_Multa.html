@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Dias Úteis</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        img {
+            width: 20%;
+            height: auto;
+        }
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        input {
+            text-align: center;
+        }
+        input[readonly] {
+            background-color: #f0f0f0;
+            border: none;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .bold {
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        function calcular() {
+            let dataInicial = new Date(document.getElementById("dataInicial").value);
+            let dataFinal = new Date(document.getElementById("dataFinal").value);
+            let salarioMinimo = parseFloat(document.getElementById("salarioMinimo").value);
+            
+            if (isNaN(dataInicial) || isNaN(dataFinal) || dataInicial > dataFinal) {
+                alert("Por favor, insira datas válidas.");
+                return;
+            }
+            
+            let feriadosFixos = [
+                "04-21", "05-01", "09-07", "06-24", "08-05", "10-11", "10-12", "10-28", "11-02", "11-15", "11-20", "12-23", "12-24", "12-25"
+            ];
+            let diasUteis = 0;
+            
+            for (let d = new Date(dataInicial); d <= dataFinal; d.setDate(d.getDate() + 1)) {
+                let diaSemana = d.getDay();
+                let mesDia = (`0${d.getMonth() + 1}`).slice(-2) + "-" + (`0${d.getDate()}`).slice(-2);
+                
+                if (diaSemana !== 0 && diaSemana !== 6 && !feriadosFixos.includes(mesDia)) {
+                    diasUteis++;
+                }
+            }
+            
+            let diasBloqueio = diasUteis / 2;
+            let multaPorDia = salarioMinimo / 1000;
+            let multaTotal = diasBloqueio * multaPorDia;
+            
+            document.getElementById("diasUteis").value = diasUteis;
+            document.getElementById("diasBloqueio").value = diasBloqueio.toFixed(2);
+            document.getElementById("multaPorDia").value = multaPorDia.toFixed(2);
+            document.getElementById("multaTotal").value = multaTotal.toFixed(2);
+        }
+    </script>
+</head>
+<body>
+    <img src="https://www.ifpb.edu.br/campinagrande/documentos-gerais/downloads/logo-campus-horizontal-png/@@images/b09090e5-b5ea-4c5d-aafb-be44a2f31418.png" alt="Logo IFPB">
+    
+    <h2>Calculadora de Dias Úteis</h2>
+    
+    <div class="input-group">
+        <label for="dataInicial">Data Inicial:</label>
+        <input type="date" id="dataInicial">
+        
+        <label for="dataFinal">Data Final:</label>
+        <input type="date" id="dataFinal">
+        
+        <label for="salarioMinimo">Valor do Salário Mínimo Vigente (R$):</label>
+        <input type="number" id="salarioMinimo" value="1518" step="0.01">
+        
+        <button onclick="calcular()">Calcular</button>
+    </div>
+    
+    <br>
+    
+    <div class="bold">
+        <label for="diasUteis">Dias Úteis:</label>
+        <input type="number" id="diasUteis" readonly>
+    </div>
+    
+    <br>
+    
+    <label for="diasBloqueio">Dias de bloqueio dividido por 2:</label>
+    <input type="number" id="diasBloqueio" readonly>
+    
+    <br>
+    
+    <label for="multaPorDia">Valor da multa por dia (R$):</label>
+    <input type="number" id="multaPorDia" readonly>
+    
+    <br>
+    
+    <div class="bold">
+        <label for="multaTotal">Multa total (R$):</label>
+        <input type="number" id="multaTotal" readonly>
+    </div>
+    
+    <br><br>
+    
+    <a href="https://pagtesouro.tesouro.gov.br/portal-gru/#/emissao-gru" target="_blank"><h2><b>Gerar GRU</b></h2></a>
+    
+<p>
+    
+    <b>Dados para Gerar GRU</b>
+    <p>Unidade Gestora / Gestão:<b> 158281 / 26417</b><br>
+    <p>Código de Recolhimento:<b> 28830-6</b><br>
+    <p>Número de Referência - <b>usar número do processo</b></p>
+</body>
+</html>
